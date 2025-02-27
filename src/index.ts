@@ -30,14 +30,13 @@ const main = async () => {
   logger.info("Starting watcher...");
   const publicClient = createPublicClient({
     chain: mainnet,
-    transport: http(`${process.env.RPC_PROVIDER_1}`),
+    transport: webSocket(`${process.env.WS_PROVIDER_1}`),
   });
 
   let unwatch = publicClient.watchContractEvent({
     address: USDC_ADDRESS,
     abi: erc20Abi,
     eventName: "Transfer",
-    pollingInterval: 12 * 1000,
     onLogs: (logs) => {
       handleTransferLog(logs as TransferLog[]);
     },
@@ -60,7 +59,7 @@ const main = async () => {
 
 
 const handleTransferLog = (logs: TransferLog[]) => {
-  const results: EventData[] = [];
+  // const results: EventData[] = [];
   logs.forEach((log) => {
     const eventData: EventData = {
       blockNumber: log.blockNumber ?? 0n,
@@ -70,9 +69,8 @@ const handleTransferLog = (logs: TransferLog[]) => {
       to: log.args ? log.args.to : '0x0000000000000000000000000000000000000000',
       value: log.args ? log.args.value : 0n,
     }
-    results.push(eventData);
+    logger.info(JSON.stringify(eventData, (_, v) => (typeof v === 'bigint' ? v.toString() : v)));
   });
-  logger.info(JSON.stringify(results, (_, v) => (typeof v === 'bigint' ? v.toString() : v)));
 };
 
 main();
